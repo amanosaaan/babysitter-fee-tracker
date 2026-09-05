@@ -374,7 +374,12 @@
         <div class="rate-row">
           <span>¥</span>
           <input type="number" min="0" step="10" id="famisapoRateInput">
-          <span>/ 時間</span>
+          <span>/ 時間(平日)</span>
+        </div>
+        <div class="rate-row" style="margin-top:6px;">
+          <span>¥</span>
+          <input type="number" min="0" step="10" id="famisapoSaturdayRateInput">
+          <span>/ 時間(土曜)</span>
         </div>
         <div class="assignment-names">
           <label>月曜日の担当 <input type="text" id="nameTashiro"></label>
@@ -392,7 +397,7 @@
       </div>
     </div>
     <div class="hint-box" style="margin-top:14px;margin-bottom:0;">
-      ファミサポは時間制です。土曜日は基本2時間、それ以外は基本1時間として自動計算します(③結果で日ごとに時間を調整できます)。
+      ファミサポは時間制です。土曜日は基本2時間・平日は基本1時間として自動計算します(③結果で日ごとに時間を調整できます)。単価も土曜日だけ別に設定できます。
     </div>
   </div>
 
@@ -525,7 +530,7 @@ const DOWS = ["日","月","火","水","木","金","土"];
 const DOW_CLASS = {"日":"sun","土":"sat"};
 const ASSIGNMENT_ORDER = ["tanaka","tashiro","kobayashi","father","babysitter"];
 
-const DEFAULT_SERVICES = { famisapo: { ratePerHour: 700 }, babysitter: { rate: 3400 } };
+const DEFAULT_SERVICES = { famisapo: { ratePerHour: 700, saturdayRatePerHour: 800 }, babysitter: { rate: 3400 } };
 const DEFAULT_ASSIGNMENT_NAMES = { tanaka: "田中さん", tashiro: "田代さん", kobayashi: "小林さん" };
 
 const OLD_STORAGE_RATES = "babysitter_sim_rates_v1";
@@ -544,7 +549,10 @@ function loadServices(){
     try{
       const parsed = JSON.parse(raw);
       return {
-        famisapo: { ratePerHour: parsed?.famisapo?.ratePerHour ?? DEFAULT_SERVICES.famisapo.ratePerHour },
+        famisapo: {
+          ratePerHour: parsed?.famisapo?.ratePerHour ?? DEFAULT_SERVICES.famisapo.ratePerHour,
+          saturdayRatePerHour: parsed?.famisapo?.saturdayRatePerHour ?? DEFAULT_SERVICES.famisapo.saturdayRatePerHour
+        },
         babysitter: { rate: parsed?.babysitter?.rate ?? DEFAULT_SERVICES.babysitter.rate }
       };
     }catch(e){}
@@ -559,7 +567,7 @@ function loadServices(){
       if(typeof oldRates["水"] === "number") babysitterRate = oldRates["水"];
     }
   }catch(e){}
-  return { famisapo: { ratePerHour: famisapoRate }, babysitter: { rate: babysitterRate } };
+  return { famisapo: { ratePerHour: famisapoRate, saturdayRatePerHour: DEFAULT_SERVICES.famisapo.saturdayRatePerHour }, babysitter: { rate: babysitterRate } };
 }
 
 function loadAssignmentNames(){
@@ -673,6 +681,7 @@ async function fetchEntriesFromSheet(){
 
 function initServiceConfig(){
   document.getElementById("famisapoRateInput").value = services.famisapo.ratePerHour;
+  document.getElementById("famisapoSaturdayRateInput").value = services.famisapo.saturdayRatePerHour;
   document.getElementById("babysitterRateInput").value = services.babysitter.rate;
   document.getElementById("nameTashiro").value = assignmentNames.tashiro;
   document.getElementById("nameKobayashi").value = assignmentNames.kobayashi;
@@ -680,6 +689,11 @@ function initServiceConfig(){
 
   document.getElementById("famisapoRateInput").addEventListener("input", e=>{
     services.famisapo.ratePerHour = Number(e.target.value) || 0;
+    saveAll();
+    renderEntries();
+  });
+  document.getElementById("famisapoSaturdayRateInput").addEventListener("input", e=>{
+    services.famisapo.saturdayRatePerHour = Number(e.target.value) || 0;
     saveAll();
     renderEntries();
   });
@@ -754,7 +768,8 @@ function assignmentShortLabel(id){
 function entryRate(entry){
   if(entry.assignment === "father") return 0;
   if(entry.assignment === "babysitter") return services.babysitter.rate || 0;
-  return (services.famisapo.ratePerHour || 0) * (entry.hours || 0);
+  const perHour = entry.dow === "土" ? services.famisapo.saturdayRatePerHour : services.famisapo.ratePerHour;
+  return (perHour || 0) * (entry.hours || 0);
 }
 
 function parsePasteText(text){
