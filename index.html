@@ -456,6 +456,7 @@
     </div>
     <div class="btn-row">
       <button class="btn-primary" id="saveDataBtn">保存する</button>
+      <button class="btn-ghost" id="refreshFromSheetBtn">最新の状態を取得</button>
     </div>
   </div>
 
@@ -532,6 +533,10 @@ const OLD_STORAGE_CONTACTS = "babysitter_sim_contacts_v1";
 const STORAGE_SERVICES = "babysitter_sim_services_v2";
 const STORAGE_ASSIGNMENT_NAMES = "babysitter_sim_assignment_names_v2";
 const STORAGE_ENTRIES = "babysitter_sim_entries_v1";
+
+// Google Apps Script Web App URL that backs the "依頼状況" spreadsheet sync.
+// Set once deployed; entries sync automatically to the sheet whenever this is non-empty.
+const SHEET_API_URL = "";
 
 function loadServices(){
   const raw = localStorage.getItem(STORAGE_SERVICES);
@@ -616,6 +621,54 @@ function saveAll(){
   localStorage.setItem(STORAGE_SERVICES, JSON.stringify(services));
   localStorage.setItem(STORAGE_ASSIGNMENT_NAMES, JSON.stringify(assignmentNames));
   localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
+  syncEntriesToSheet();
+}
+
+function entryToSheetRow(entry){
+  const assignmentName = entry.assignment === "father" ? "父"
+    : entry.assignment === "babysitter" ? "ベビーシッター"
+    : (assignmentNames[entry.assignment] || "");
+  return {
+    id: entry.id, year: entry.year, month: entry.month, day: entry.day, dow: entry.dow, label: entry.label,
+    assignment: entry.assignment, assignmentName,
+    hours: entry.hours, rate: entryRate(entry), confirmed: entry.confirmed
+  };
+}
+
+function sheetRowToEntry(row){
+  return {
+    id: String(row.id),
+    year: Number(row.year), month: Number(row.month), day: Number(row.day),
+    dow: row.dow, label: row.label || `${Number(row.month)}/${Number(row.day)}`,
+    assignment: row.assignment,
+    hours: Number(row.hours) || 1,
+    confirmed: !!row.confirmed
+  };
+}
+
+async function syncEntriesToSheet(){
+  if(!SHEET_API_URL) return true;
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "replaceAll", entries: entries.map(entryToSheetRow) })
+    });
+    const data = await res.json();
+    return !!data.ok;
+  }catch(err){
+    return false;
+  }
+}
+
+async function fetchEntriesFromSheet(){
+  if(!SHEET_API_URL) return null;
+  try{
+    const res = await fetch(SHEET_API_URL);
+    const data = await res.json();
+    if(data.ok && Array.isArray(data.entries)) return data.entries.map(sheetRowToEntry);
+  }catch(err){}
+  return null;
 }
 
 function initServiceConfig(){
@@ -1134,9 +1187,32 @@ function clearAllEntries(){
 document.getElementById("clearAllBtn").addEventListener("click", clearAllEntries);
 document.getElementById("calendarResetBtn").addEventListener("click", clearAllEntries);
 
-document.getElementById("saveDataBtn").addEventListener("click", ()=>{
-  saveAll();
-  showAlert(`保存しました(${entries.length}件の予定)。`);
+document.getElementById("saveDataBtn").addEventListener("click", async ()=>{
+  localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
+  if(!SHEET_API_URL){
+    showAlert(`保存しました(${entries.length}件の予定)。`);
+    return;
+  }
+  const ok = await syncEntriesToSheet();
+  showAlert(ok
+    ? `スプレッドシートに保存しました(${entries.length}件の予定)。`
+    : "スプレッドシートへの保存に失敗しました。通信環境をご確認のうえ、もう一度お試しください。");
+});
+
+document.getElementById("refreshFromSheetBtn").addEventListener("click", async ()=>{
+  if(!SHEET_API_URL){
+    showAlert("スプレッドシート連携が未設定です。");
+    return;
+  }
+  const remote = await fetchEntriesFromSheet();
+  if(remote){
+    entries = remote;
+    localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
+    renderEntries();
+    showAlert(`最新の状態を取得しました(${entries.length}件)。`);
+  } else {
+    showAlert("読み込みに失敗しました。通信環境をご確認ください。");
+  }
 });
 
 document.getElementById("buildCustomMessageBtn").addEventListener("click", ()=>{
@@ -1573,8 +1649,18 @@ document.getElementById("manualAddBtn").addEventListener("click", ()=>{
   document.getElementById("manualDate").value = "";
 });
 
+async function initEntries(){
+  renderEntries();
+  const remote = await fetchEntriesFromSheet();
+  if(remote){
+    entries = remote;
+    localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
+    renderEntries();
+  }
+}
+
 initServiceConfig();
-renderEntries();
+initEntries();
 </script>
 </body>
 </html>
