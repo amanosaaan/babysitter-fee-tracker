@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ベビーシッター/ファミサポ料金シミュレーション</title>
+<style>
+  :root{
+    --bg:#f7f5f2;
+    --card:#ffffff;
+    --ink:#2f2a26;
+    --sub:#726a63;
+    --line:#e7e1da;
+    --accent:#c97b5a;
+    --accent-ink:#ffffff;
+    --accent-soft:#f3e2da;
+    --danger:#b3543f;
+    --father:#5f8a5a;
+    --father-soft:#e4ecdf;
+    --svc2:#7c6bb5;
+    --svc2-soft:#e2ddf0;
+    --shadow:0 2px 8px rgba(60,45,30,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1c1a18;
+      --card:#26221f;
+      --ink:#f0ece6;
+      --sub:#b3a99e;
+      --line:#3a352f;
+      --accent:#e08a63;
+      --accent-ink:#1c1a18;
+      --accent-soft:#3a2c24;
+      --danger:#e08a7a;
+      --father:#8fbf88;
+      --father-soft:#2c3628;
+      --svc2:#a99bd9;
+      --svc2-soft:#332c4a;
+      --shadow:0 2px 10px rgba(0,0,0,0.35);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    padding:24px 16px 64px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+  h1{font-size:1.4rem;margin:0 0 4px;}
+  .lead{color:var(--sub);font-size:0.9rem;margin:0 0 24px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow);
+  }
+  .card h2{
+    font-size:1rem;
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .step-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-size:0.75rem;
+    font-weight:600;
+    flex:none;
+  }
+  .service-config{display:flex;flex-direction:column;gap:14px;}
+  .service-config-item{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    background:var(--bg);
+  }
+  .service-config-title{font-weight:700;margin-bottom:8px;}
+  .rate-row{display:flex;align-items:center;gap:6px;}
+  .rate-row input[type=number]{
+    width:100px;
+    padding:6px 8px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-size:0.95rem;
+  }
+  .rate-row span{color:var(--sub);font-size:0.85rem;}
+  .assignment-names{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+  .assignment-names label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:0.82rem;color:var(--sub);}
+  .assignment-names input{
+    flex:1;
+    max-width:160px;
+    padding:6px 8px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-size:0.85rem;
+  }
+  .contact-messages{margin-top:16px;}
+  .contact-block{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:14px;
+    background:var(--bg);
+  }
+  .contact-block:last-child{margin-bottom:0;}
+  .contact-block-title{font-weight:700;margin-bottom:8px;font-size:0.95rem;}
+  .contact-message-text{
+    width:100%;
+    min-height:150px;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-size:0.88rem;
+    font-family:inherit;
+    resize:vertical;
+    white-space:pre-wrap;
+    margin-bottom:10px;
+    box-sizing:border-box;
+  }
+  textarea{
+    width:100%;
+    min-height:180px;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    color:var(--ink);
+    font-size:0.92rem;
+    font-family:inherit;
+    resize:vertical;
+  }
+  .btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  button{
+    cursor:pointer;
+    border:none;
+    border-radius:9px;
+    padding:9px 16px;
+    font-size:0.9rem;
+    font-weight:600;
+    font-family:inherit;
+  }
+  .btn-primary{background:var(--accent);color:var(--accent-ink);}
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-ghost{background:transparent;color:var(--sub);border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--bg);}
+  .btn-danger-ghost{background:transparent;color:var(--danger);border:1px solid var(--line);}
+  .btn-danger-ghost:hover{background:var(--accent-soft);}
+  .manual-add{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .manual-add input[type=text]{
+    width:90px;
+    padding:7px 9px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    color:var(--ink);
+    font-size:0.9rem;
+  }
+  .manual-add select{
+    padding:7px 9px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    color:var(--ink);
+    font-size:0.9rem;
+  }
+  table{width:100%;border-collapse:collapse;font-size:0.9rem;}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);}
+  th{color:var(--sub);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.03em;}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  th.num{text-align:right;}
+  tr.sun td.dow-cell{color:#c25b5b;}
+  tr.sat td.dow-cell{color:#4a7fbf;}
+  tr.father td{color:var(--father);}
+  tr.father td.dow-cell{color:var(--sub);}
+  .assignment-select{
+    font-size:0.78rem;
+    padding:4px 6px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    max-width:150px;
+  }
+  .hours-input{
+    width:56px;
+    padding:4px 6px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-size:0.82rem;
+    text-align:right;
+  }
+  .hours-na{color:var(--sub);font-size:0.82rem;}
+  tr.service-overridden td.dow-cell{color:var(--danger);}
+  .remove-btn{
+    background:transparent;
+    border:none;
+    color:var(--sub);
+    cursor:pointer;
+    font-size:1.05rem;
+    padding:2px 8px;
+    line-height:1;
+  }
+  .remove-btn:hover{color:var(--danger);}
+  .empty-hint{color:var(--sub);font-size:0.88rem;padding:20px 4px;text-align:center;}
+  .summary-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+  .sum-service-block{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    background:var(--bg);
+  }
+  .sum-service-header{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:0.95rem;}
+  .sum-service-amt{color:var(--accent);font-size:1.05rem;}
+  .sum-service-count{font-size:0.75rem;color:var(--sub);font-weight:400;margin-left:6px;}
+  .sum-person-list{margin-top:8px;display:flex;flex-direction:column;}
+  .sum-person-row{display:flex;align-items:baseline;gap:8px;font-size:0.82rem;color:var(--ink);padding:5px 0;border-top:1px dashed var(--line);}
+  .sum-person-row:first-child{border-top:none;}
+  .sum-person-row span:first-child{flex:1;}
+  .sum-person-count{color:var(--sub);}
+  .sum-person-amt{font-weight:600;min-width:72px;text-align:right;}
+  .grand-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .grand-total .gt-label{font-size:0.95rem;color:var(--sub);}
+  .grand-total .gt-amt{font-size:1.7rem;font-weight:800;color:var(--accent);}
+  .hint-box{
+    background:var(--accent-soft);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:0.8rem;
+    color:var(--sub);
+    margin-bottom:14px;
+  }
+  code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:0.85em;}
+  .calendar-block{margin-bottom:22px;}
+  .calendar-block:last-child{margin-bottom:0;}
+  .calendar-title{font-size:0.92rem;font-weight:700;margin-bottom:8px;}
+  .calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .cal-head{
+    text-align:center;
+    font-size:0.72rem;
+    color:var(--sub);
+    padding-bottom:2px;
+  }
+  .cal-head.sun{color:#c25b5b;}
+  .cal-head.sat{color:#4a7fbf;}
+  .cal-cell{
+    position:relative;
+    min-height:56px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:5px 6px;
+    background:var(--bg);
+  }
+  .cal-cell.blank{border-color:transparent;background:transparent;}
+  .cal-cell.tentative{border-style:dashed;}
+  .cal-tentative-tag{position:absolute;top:3px;right:5px;font-size:0.58rem;color:var(--sub);}
+  .cal-cell.has-entry.svc-accent{background:var(--accent-soft);border-color:var(--accent);}
+  .cal-cell.has-entry.svc-svc2{background:var(--svc2-soft);border-color:var(--svc2);}
+  .cal-cell.has-father:not(.has-entry){
+    background:var(--father-soft);
+    border-color:var(--father);
+  }
+  .cal-daynum{font-size:0.78rem;color:var(--sub);}
+  .cal-cell.has-entry .cal-daynum,.cal-cell.has-father .cal-daynum{color:var(--ink);font-weight:600;}
+  .cal-amount{font-size:0.78rem;font-weight:700;margin-top:4px;}
+  .cal-cell.svc-accent .cal-amount{color:var(--accent);}
+  .cal-cell.svc-svc2 .cal-amount{color:var(--svc2);}
+  .cal-label{font-size:0.66rem;color:var(--sub);margin-top:1px;word-break:break-word;}
+  .cal-cell.has-father:not(.has-entry) .cal-label{color:var(--father);font-weight:600;}
+  .cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:0.78rem;color:var(--sub);}
+  .legend-item{display:flex;align-items:center;gap:5px;}
+  .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+  .legend-dot.svc-accent{background:var(--accent);}
+  .legend-dot.svc-svc2{background:var(--svc2);}
+  .legend-dot.legend-father{background:var(--father);}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  @media (max-width:600px){
+    body{padding:16px 10px 48px;}
+    h1{font-size:1.2rem;}
+    .card{padding:14px;border-radius:12px;}
+    table{font-size:0.82rem;}
+    th,td{padding:7px 4px;}
+    .manual-add{flex-direction:column;align-items:stretch;}
+    .manual-add input[type=text],.manual-add select{width:100%;}
+    .btn-row{flex-direction:column;}
+    .btn-row button{width:100%;}
+    button{padding:12px 16px;font-size:0.95rem;}
+    .remove-btn{font-size:1.3rem;padding:6px 10px;}
+    .calendar-grid{gap:4px;}
+    .cal-cell{min-height:50px;padding:4px 3px;border-radius:6px;}
+    .cal-daynum{font-size:0.68rem;}
+    .cal-amount{font-size:0.64rem;margin-top:2px;}
+    .cal-label{font-size:0.54rem;}
+    .cal-head{font-size:0.64rem;}
+    .grand-total .gt-amt{font-size:1.4rem;}
+    .assignment-select{max-width:100px;font-size:0.72rem;}
+  }
+  .preview-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(20,16,12,0.72);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+  }
+  .preview-modal-inner{
+    background:var(--card);
+    border-radius:14px;
+    padding:16px;
+    max-width:100%;
+    max-height:100%;
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+  }
+  .preview-modal-hint{font-size:0.85rem;color:var(--sub);margin:0;text-align:center;}
+  #previewModalImg{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block;}
+  .msg-modal-inner{max-width:320px;}
+  .msg-modal-text{font-size:0.92rem;color:var(--ink);margin:0;text-align:center;white-space:pre-wrap;}
+  .msg-modal-inner .btn-row{margin-top:0;width:100%;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ワンオペ日 ベビーシッター/ファミサポ料金シミュレーション</h1>
+  <p class="lead">サービスごとの単価を設定し、対象日を貼り付ければ自動集計します。</p>
+
+  <div class="card">
+    <h2><span class="step-badge">1</span>サービスごとの単価設定</h2>
+    <div class="service-config">
+      <div class="service-config-item">
+        <div class="service-config-title">ファミサポ</div>
+        <div class="rate-row">
+          <span>¥</span>
+          <input type="number" min="0" step="10" id="famisapoRateInput">
+          <span>/ 時間</span>
+        </div>
+        <div class="assignment-names">
+          <label>月曜日の担当 <input type="text" id="nameTashiro"></label>
+          <label>火曜日の担当 <input type="text" id="nameKobayashi"></label>
+          <label>それ以外の担当 <input type="text" id="nameTanaka"></label>
+        </div>
+      </div>
+      <div class="service-config-item">
+        <div class="service-config-title">ベビーシッター</div>
+        <div class="rate-row">
+          <span>¥</span>
+          <input type="number" min="0" step="10" id="babysitterRateInput">
+          <span>/ 回</span>
+        </div>
+      </div>
+    </div>
+    <div class="hint-box" style="margin-top:14px;margin-bottom:0;">
+      ファミサポは時間制です。土曜日は基本2時間、それ以外は基本1時間として自動計算します(③結果で日ごとに時間を調整できます)。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-badge">2</span>対象日の入力</h2>
+    <div class="hint-box">
+      <code>9/19</code> のように月/日だけを1行ずつ貼り付けてください。「火曜日」などの見出し行は無視されます。曜日と年は、当月・来月・来々月のいずれかとみなして自動で判定します。曜日を指定したい場合は <code>9/19(土)</code> のように書くこともできます。同じ月の日をまとめて書きたいときは <code>9/1,2,3</code> のようにカンマ区切りでもOKです。<br>
+      「<code>父</code>」とだけ書いた行のあとに続く日付は、無料の来訪日として記録されます(合計金額には含めず、カレンダーには表示します)。
+    </div>
+    <textarea id="pasteArea" placeholder="例)
+9/19
+9/26
+9/30
+9/1,2,3
+
+父
+9/23
+"></textarea>
+    <div class="btn-row">
+      <button class="btn-primary" id="importBtn">この内容を取り込む</button>
+      <button class="btn-ghost" id="clearAllBtn">一覧を全てクリア</button>
+    </div>
+    <div class="manual-add">
+      <input type="text" id="manualDate" placeholder="例) 9/20" />
+      <select id="manualDow">
+        <option value="">曜日を自動判定</option>
+        <option value="日">日</option>
+        <option value="月">月</option>
+        <option value="火">火</option>
+        <option value="水">水</option>
+        <option value="木">木</option>
+        <option value="金">金</option>
+        <option value="土">土</option>
+      </select>
+      <button class="btn-ghost" id="manualAddBtn">1件だけ手動追加</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-badge">3</span>結果</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>曜日</th>
+            <th>サービス</th>
+            <th>時間</th>
+            <th class="num">単価</th>
+            <th>確定</th>
+            <th>選択</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="entryBody"></tbody>
+      </table>
+    </div>
+    <div id="emptyHint" class="empty-hint" style="display:none;">まだ対象日がありません。上のフォームから追加してください。</div>
+    <div class="hint-box" style="margin-top:14px;">
+      「確定」にチェックを入れた日は、カレンダーで実線・確定として表示されます。チェックがない日は点線で「予定」として表示されます。「選択」は⑦の依頼メッセージ作成で使います。
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="saveDataBtn">保存する</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-badge">4</span>カレンダー表示</h2>
+    <div id="calendarContainer"></div>
+    <div id="calendarEmptyHint" class="empty-hint" style="display:none;">まだ対象日がありません。</div>
+    <div class="btn-row">
+      <button class="btn-ghost" id="calendarResetBtn">カレンダーをリセット</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-badge">5</span>サービス別・合計</h2>
+    <div class="summary-grid" id="summaryGrid"></div>
+    <div class="grand-total">
+      <span class="gt-label">合計金額</span>
+      <span class="gt-amt" id="grandTotal">¥0</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-badge">6</span>画像・PDFで保存</h2>
+    <div class="hint-box">
+      ④カレンダー表示 と ⑤サービス別・合計 だけをまとめて1枚の画像にして表示します。表示された画像を長押し(パソコンは右クリック)して保存し、LINEなどで共有してください。PDF保存はブラウザによっては動作しないことがあります。
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="exportPngBtn">画像を表示(保存用)</button>
+      <button class="btn-ghost" id="exportPdfBtn">PDFとして保存</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-badge">7</span>依頼メッセージを作成</h2>
+    <div class="hint-box">
+      ③結果で「選択」にチェックを入れた日付をもとに、任意の宛先へのメッセージを作成します。宛先名を入力してボタンを押してください。
+    </div>
+    <div class="manual-add">
+      <input type="text" id="customMessageName" placeholder="宛先名(例: 田代さん)" />
+      <button class="btn-primary" id="buildCustomMessageBtn">選択した日付でメッセージを作成</button>
+    </div>
+    <div id="customMessageResult" class="contact-messages"></div>
+  </div>
+</div>
+
+<div id="imagePreviewModal" class="preview-modal" style="display:none;">
+  <div class="preview-modal-inner">
+    <p class="preview-modal-hint">画像を長押し(パソコンは右クリック)して保存してください</p>
+    <img id="previewModalImg" alt="料金シミュレーション画像" />
+    <button class="btn-ghost" id="previewModalClose">閉じる</button>
+  </div>
+</div>
+
+<div id="msgModal" class="preview-modal" style="display:none;">
+  <div class="preview-modal-inner msg-modal-inner">
+    <p id="msgModalText" class="msg-modal-text"></p>
+    <div class="btn-row">
+      <button class="btn-ghost" id="msgModalCancel" style="display:none;">キャンセル</button>
+      <button class="btn-primary" id="msgModalOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DOWS = ["日","月","火","水","木","金","土"];
+const DOW_CLASS = {"日":"sun","土":"sat"};
+const ASSIGNMENT_ORDER = ["tanaka","tashiro","kobayashi","father","babysitter"];
+
+const DEFAULT_SERVICES = { famisapo: { ratePerHour: 700 }, babysitter: { rate: 3400 } };
+const DEFAULT_ASSIGNMENT_NAMES = { tanaka: "田中さん", tashiro: "田代さん", kobayashi: "小林さん" };
+
+const OLD_STORAGE_RATES = "babysitter_sim_rates_v1";
+const OLD_STORAGE_CONTACTS = "babysitter_sim_contacts_v1";
+const STORAGE_SERVICES = "babysitter_sim_services_v2";
+const STORAGE_ASSIGNMENT_NAMES = "babysitter_sim_assignment_names_v2";
+const STORAGE_ENTRIES = "babysitter_sim_entries_v1";
+
+function loadServices(){
+  const raw = localStorage.getItem(STORAGE_SERVICES);
+  if(raw){
+    try{
+      const parsed = JSON.parse(raw);
+      return {
+        famisapo: { ratePerHour: parsed?.famisapo?.ratePerHour ?? DEFAULT_SERVICES.famisapo.ratePerHour },
+        babysitter: { rate: parsed?.babysitter?.rate ?? DEFAULT_SERVICES.babysitter.rate }
+      };
+    }catch(e){}
+  }
+  let famisapoRate = DEFAULT_SERVICES.famisapo.ratePerHour;
+  let babysitterRate = DEFAULT_SERVICES.babysitter.rate;
+  try{
+    const oldRaw = localStorage.getItem(OLD_STORAGE_RATES);
+    if(oldRaw){
+      const oldRates = JSON.parse(oldRaw);
+      if(typeof oldRates["月"] === "number") famisapoRate = oldRates["月"];
+      if(typeof oldRates["水"] === "number") babysitterRate = oldRates["水"];
+    }
+  }catch(e){}
+  return { famisapo: { ratePerHour: famisapoRate }, babysitter: { rate: babysitterRate } };
+}
+
+function loadAssignmentNames(){
+  const raw = localStorage.getItem(STORAGE_ASSIGNMENT_NAMES);
+  if(raw){
+    try{ return {...DEFAULT_ASSIGNMENT_NAMES, ...JSON.parse(raw)}; }catch(e){}
+  }
+  const names = {...DEFAULT_ASSIGNMENT_NAMES};
+  try{
+    const oldRaw = localStorage.getItem(OLD_STORAGE_CONTACTS);
+    if(oldRaw){
+      const oldContacts = JSON.parse(oldRaw);
+      if(oldContacts["月"]) names.tashiro = oldContacts["月"];
+      if(oldContacts["火"]) names.kobayashi = oldContacts["火"];
+      if(oldContacts["土"]) names.tanaka = oldContacts["土"];
+    }
+  }catch(e){}
+  return names;
+}
+
+function loadArray(key){
+  try{
+    const raw = localStorage.getItem(key);
+    if(!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function migrateEntry(e){
+  if(e.assignment) return e;
+  let assignment;
+  if(e.father){
+    assignment = "father";
+  } else {
+    const effDow = e.serviceDow || e.dow;
+    if(effDow === "月") assignment = "tashiro";
+    else if(effDow === "火") assignment = "kobayashi";
+    else if(effDow === "水" || effDow === "金") assignment = "babysitter";
+    else assignment = "tanaka";
+  }
+  return {
+    id: e.id, year: e.year, month: e.month, day: e.day, dow: e.dow,
+    assignment,
+    hours: e.dow === "土" ? 2 : 1,
+    confirmed: !!e.confirmed,
+    label: e.label
+  };
+}
+
+let services = loadServices();
+let assignmentNames = loadAssignmentNames();
+let entries = loadArray(STORAGE_ENTRIES).map(migrateEntry);
+const selectedForMessage = new Set();
+
+function saveAll(){
+  localStorage.setItem(STORAGE_SERVICES, JSON.stringify(services));
+  localStorage.setItem(STORAGE_ASSIGNMENT_NAMES, JSON.stringify(assignmentNames));
+  localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
+}
+
+function initServiceConfig(){
+  document.getElementById("famisapoRateInput").value = services.famisapo.ratePerHour;
+  document.getElementById("babysitterRateInput").value = services.babysitter.rate;
+  document.getElementById("nameTashiro").value = assignmentNames.tashiro;
+  document.getElementById("nameKobayashi").value = assignmentNames.kobayashi;
+  document.getElementById("nameTanaka").value = assignmentNames.tanaka;
+
+  document.getElementById("famisapoRateInput").addEventListener("input", e=>{
+    services.famisapo.ratePerHour = Number(e.target.value) || 0;
+    saveAll();
+    renderEntries();
+  });
+  document.getElementById("babysitterRateInput").addEventListener("input", e=>{
+    services.babysitter.rate = Number(e.target.value) || 0;
+    saveAll();
+    renderEntries();
+  });
+  document.getElementById("nameTashiro").addEventListener("input", e=>{
+    assignmentNames.tashiro = e.target.value;
+    saveAll();
+    renderEntries();
+  });
+  document.getElementById("nameKobayashi").addEventListener("input", e=>{
+    assignmentNames.kobayashi = e.target.value;
+    saveAll();
+    renderEntries();
+  });
+  document.getElementById("nameTanaka").addEventListener("input", e=>{
+    assignmentNames.tanaka = e.target.value;
+    saveAll();
+    renderEntries();
+  });
+}
+
+function resolveYear(month){
+  const now = new Date();
+  const baseYear = now.getFullYear();
+  const baseMonth = now.getMonth() + 1;
+  for(let offset = 0; offset <= 2; offset++){
+    const raw = baseMonth + offset;
+    const y = baseYear + Math.floor((raw - 1) / 12);
+    const m = ((raw - 1) % 12) + 1;
+    if(m === month) return y;
+  }
+  return month < baseMonth ? baseYear + 1 : baseYear;
+}
+function computeDow(year, month, day){
+  return DOWS[new Date(year, month - 1, day).getDay()];
+}
+function defaultAssignment(dow){
+  if(dow === "月") return "tashiro";
+  if(dow === "火") return "kobayashi";
+  return "tanaka";
+}
+function defaultHours(dow){
+  return dow === "土" ? 2 : 1;
+}
+function makeEntry(month, day, explicitDow, isFather){
+  const year = resolveYear(month);
+  const dow = explicitDow || computeDow(year, month, day);
+  return {
+    id: `${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    year, month, day, dow,
+    assignment: isFather ? "father" : defaultAssignment(dow),
+    hours: defaultHours(dow),
+    confirmed: false,
+    label: `${month}/${day}`
+  };
+}
+function assignmentContactLabel(id){
+  if(id === "father") return "父";
+  if(id === "babysitter") return "ベビーシッター";
+  return `ファミサポ(${assignmentNames[id]})`;
+}
+function assignmentShortLabel(id){
+  if(id === "father") return "父";
+  if(id === "babysitter") return "ベビーシッター";
+  const short = (assignmentNames[id] || "").replace(/さん$/,"");
+  return `ファミサポ(${short})`;
+}
+function entryRate(entry){
+  if(entry.assignment === "father") return 0;
+  if(entry.assignment === "babysitter") return services.babysitter.rate || 0;
+  return (services.famisapo.ratePerHour || 0) * (entry.hours || 0);
+}
+
+function parsePasteText(text){
+  const lines = text.split(/\r?\n/);
+  const reWithDow = /^(\d{1,2})\s*\/\s*(\d{1,2})\s*[\(（]\s*([日月火水木金土])\s*[\)）]/;
+  const reMultiDay = /^(\d{1,2})\s*\/\s*(\d{1,2}(?:\s*[,，、]\s*\d{1,2})+)\s*$/;
+  const reDateOnly = /^(\d{1,2})\s*\/\s*(\d{1,2})\s*$/;
+  const found = [];
+  let fatherMode = false;
+  lines.forEach(line=>{
+    const t = line.trim();
+    if(!t){ fatherMode = false; return; }
+    if(t === "父"){ fatherMode = true; return; }
+    let m = t.match(reWithDow);
+    if(m){
+      found.push(makeEntry(Number(m[1]), Number(m[2]), m[3], fatherMode));
+      return;
+    }
+    m = t.match(reMultiDay);
+    if(m){
+      const month = Number(m[1]);
+      m[2].split(/[,，、]/).map(s=>Number(s.trim())).filter(d=>!isNaN(d)).forEach(day=>{
+        found.push(makeEntry(month, day, null, fatherMode));
+      });
+      return;
+    }
+    m = t.match(reDateOnly);
+    if(m){
+      found.push(makeEntry(Number(m[1]), Number(m[2]), null, fatherMode));
+      return;
+    }
+    fatherMode = false;
+  });
+  return found;
+}
+
+function renderEntries(){
+  const body = document.getElementById("entryBody");
+  const emptyHint = document.getElementById("emptyHint");
+  body.innerHTML = "";
+
+  const validIds = new Set(entries.map(en=>en.id));
+  [...selectedForMessage].forEach(id=>{ if(!validIds.has(id)) selectedForMessage.delete(id); });
+
+  const sorted = [...entries].sort((a,b)=>{
+    if(a.year !== b.year) return a.year - b.year;
+    if(a.month !== b.month) return a.month - b.month;
+    return a.day - b.day;
+  });
+
+  emptyHint.style.display = sorted.length === 0 ? "block" : "none";
+
+  sorted.forEach(entry=>{
+    const tr = document.createElement("tr");
+    if(entry.assignment === "father") tr.className = "father";
+    else if(DOW_CLASS[entry.dow]) tr.className = DOW_CLASS[entry.dow];
+    const isOverridden = entry.assignment !== "father" && entry.assignment !== defaultAssignment(entry.dow);
+    if(isOverridden) tr.className += " service-overridden";
+
+    const rate = entryRate(entry);
+    const isFamisapo = entry.assignment !== "father" && entry.assignment !== "babysitter";
+
+    const assignmentSelectHtml = `
+      <select class="assignment-select" data-id="${entry.id}">
+        ${ASSIGNMENT_ORDER.map(id=>`<option value="${id}" ${entry.assignment===id ? "selected" : ""}>${assignmentContactLabel(id)}</option>`).join("")}
+      </select>
+    `;
+    const hoursHtml = isFamisapo
+      ? `<input type="number" class="hours-input" data-id="${entry.id}" min="0.5" step="0.5" value="${entry.hours}">`
+      : `<span class="hours-na">-</span>`;
+
+    tr.innerHTML = `
+      <td>${entry.label}</td>
+      <td class="dow-cell">${entry.dow}</td>
+      <td>${assignmentSelectHtml}</td>
+      <td>${hoursHtml}</td>
+      <td class="num">¥${rate.toLocaleString()}</td>
+      <td><input type="checkbox" class="confirm-checkbox" data-id="${entry.id}" ${entry.confirmed ? "checked" : ""}></td>
+      <td><input type="checkbox" class="select-checkbox" data-id="${entry.id}" ${selectedForMessage.has(entry.id) ? "checked" : ""}></td>
+      <td><button class="remove-btn" data-id="${entry.id}" title="削除">×</button></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll(".assignment-select").forEach(sel=>{
+    sel.addEventListener("change", e=>{
+      const entry = entries.find(en=>en.id === e.target.dataset.id);
+      if(entry){
+        entry.assignment = e.target.value;
+        saveAll();
+        renderEntries();
+      }
+    });
+  });
+
+  body.querySelectorAll(".hours-input").forEach(inp=>{
+    inp.addEventListener("change", e=>{
+      const entry = entries.find(en=>en.id === e.target.dataset.id);
+      if(entry){
+        entry.hours = Number(e.target.value) || 0;
+        saveAll();
+        renderEntries();
+      }
+    });
+  });
+
+  body.querySelectorAll(".confirm-checkbox").forEach(cb=>{
+    cb.addEventListener("change", e=>{
+      const entry = entries.find(en=>en.id === e.target.dataset.id);
+      if(entry){
+        entry.confirmed = e.target.checked;
+        saveAll();
+        renderEntries();
+      }
+    });
+  });
+
+  body.querySelectorAll(".select-checkbox").forEach(cb=>{
+    cb.addEventListener("change", e=>{
+      const id = e.target.dataset.id;
+      if(e.target.checked) selectedForMessage.add(id);
+      else selectedForMessage.delete(id);
+    });
+  });
+
+  body.querySelectorAll(".remove-btn").forEach(btn=>{
+    btn.addEventListener("click", e=>{
+      const id = e.target.dataset.id;
+      entries = entries.filter(en=>en.id !== id);
+      saveAll();
+      renderEntries();
+    });
+  });
+
+  renderCalendar();
+  renderSummary();
+}
+
+function getCalendarGroups(){
+  const groups = new Map();
+  entries.forEach(entry=>{
+    const key = `${entry.year}-${entry.month}`;
+    if(!groups.has(key)) groups.set(key, {year: entry.year, month: entry.month, byDay: new Map()});
+    const g = groups.get(key);
+    const list = g.byDay.get(entry.day) || [];
+    list.push(entry);
+    g.byDay.set(entry.day, list);
+  });
+  return [...groups.values()].sort((a,b)=> a.year !== b.year ? a.year - b.year : a.month - b.month);
+}
+
+function serviceColorKeyForAssignment(assignment){
+  return assignment === "babysitter" ? "svc2" : "accent";
+}
+
+function renderCalendar(){
+  const container = document.getElementById("calendarContainer");
+  const emptyHint = document.getElementById("calendarEmptyHint");
+  container.innerHTML = "";
+
+  if(entries.length === 0){
+    emptyHint.style.display = "block";
+    return;
+  }
+  emptyHint.style.display = "none";
+
+  const groupList = getCalendarGroups();
+  const hasFamisapo = entries.some(en=>en.assignment !== "father" && en.assignment !== "babysitter");
+  const hasBabysitter = entries.some(en=>en.assignment === "babysitter");
+  const hasFatherEntries = entries.some(en=>en.assignment === "father");
+
+  {
+    const legend = document.createElement("div");
+    legend.className = "cal-legend";
+    let legendHtml = "";
+    if(hasFamisapo) legendHtml += `<span class="legend-item"><span class="legend-dot svc-accent"></span>ファミサポ</span>`;
+    if(hasBabysitter) legendHtml += `<span class="legend-item"><span class="legend-dot svc-svc2"></span>ベビーシッター</span>`;
+    if(hasFatherEntries) legendHtml += `<span class="legend-item"><span class="legend-dot legend-father"></span>父</span>`;
+    legendHtml += `<span class="legend-item">実線=確定 / 点線=予定</span>`;
+    legend.innerHTML = legendHtml;
+    container.appendChild(legend);
+  }
+
+  groupList.forEach(g=>{
+    const block = document.createElement("div");
+    block.className = "calendar-block";
+
+    const title = document.createElement("div");
+    title.className = "calendar-title";
+    title.textContent = `${g.year}年${g.month}月`;
+    block.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "calendar-grid";
+
+    DOWS.forEach(dow=>{
+      const head = document.createElement("div");
+      head.className = "cal-head" + (DOW_CLASS[dow] ? " "+DOW_CLASS[dow] : "");
+      head.textContent = dow;
+      grid.appendChild(head);
+    });
+
+    const firstWeekday = new Date(g.year, g.month - 1, 1).getDay();
+    const daysInMonth = new Date(g.year, g.month, 0).getDate();
+
+    for(let i=0;i<firstWeekday;i++){
+      const blank = document.createElement("div");
+      blank.className = "cal-cell blank";
+      grid.appendChild(blank);
+    }
+
+    for(let day=1; day<=daysInMonth; day++){
+      const dayEntries = g.byDay.get(day) || [];
+      const payableToday = dayEntries.filter(en=>en.assignment !== "father");
+      const hasFather = dayEntries.some(en=>en.assignment === "father");
+      const cell = document.createElement("div");
+      let svcClass = "";
+      if(payableToday.length){
+        svcClass = ` svc-${serviceColorKeyForAssignment(payableToday[0].assignment)}`;
+      }
+      const allConfirmed = dayEntries.length > 0 && dayEntries.every(en=>en.confirmed);
+      cell.className = "cal-cell" + (payableToday.length ? ` has-entry${svcClass}` : "") + (hasFather ? " has-father" : "") + (dayEntries.length && !allConfirmed ? " tentative" : "");
+      if(dayEntries.length){
+        const total = payableToday.reduce((sum,en)=> sum + entryRate(en), 0);
+        const labelParts = [...new Set(payableToday.map(en=> assignmentShortLabel(en.assignment)))];
+        if(hasFather) labelParts.push("父");
+        const labelText = labelParts.join("/");
+        cell.innerHTML = `
+          ${!allConfirmed ? `<div class="cal-tentative-tag">予定</div>` : ""}
+          <div class="cal-daynum">${day}</div>
+          ${payableToday.length ? `<div class="cal-amount">¥${total.toLocaleString()}</div>` : ""}
+          ${labelText ? `<div class="cal-label">${labelText}</div>` : ""}
+        `;
+      } else {
+        cell.innerHTML = `<div class="cal-daynum">${day}</div>`;
+      }
+      grid.appendChild(cell);
+    }
+
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+}
+
+function renderSummary(){
+  const container = document.getElementById("summaryGrid");
+  container.innerHTML = "";
+
+  const payable = entries.filter(en=>en.assignment !== "father");
+  const famisapoEntries = payable.filter(en=>en.assignment !== "babysitter");
+  const babysitterEntries = payable.filter(en=>en.assignment === "babysitter");
+
+  const famisapoTotal = famisapoEntries.reduce((s,en)=>s+entryRate(en),0);
+  const babysitterTotal = babysitterEntries.reduce((s,en)=>s+entryRate(en),0);
+  const grandTotal = famisapoTotal + babysitterTotal;
+
+  if(famisapoEntries.length){
+    const block = document.createElement("div");
+    block.className = "sum-service-block";
+    let rowsHtml = "";
+    ["tanaka","tashiro","kobayashi"].forEach(id=>{
+      const list = famisapoEntries.filter(en=>en.assignment===id);
+      if(list.length === 0) return;
+      const subtotal = list.reduce((s,en)=>s+entryRate(en),0);
+      rowsHtml += `
+        <div class="sum-person-row">
+          <span>${assignmentNames[id]}</span>
+          <span class="sum-person-count">${list.length}回</span>
+          <span class="sum-person-amt">¥${subtotal.toLocaleString()}</span>
+        </div>
+      `;
+    });
+    block.innerHTML = `
+      <div class="sum-service-header">
+        <span>ファミサポ</span>
+        <span class="sum-service-amt">¥${famisapoTotal.toLocaleString()}<span class="sum-service-count">(${famisapoEntries.length}回)</span></span>
+      </div>
+      <div class="sum-person-list">${rowsHtml}</div>
+    `;
+    container.appendChild(block);
+  }
+
+  if(babysitterEntries.length){
+    const block = document.createElement("div");
+    block.className = "sum-service-block";
+    block.innerHTML = `
+      <div class="sum-service-header">
+        <span>ベビーシッター</span>
+        <span class="sum-service-amt">¥${babysitterTotal.toLocaleString()}<span class="sum-service-count">(${babysitterEntries.length}回)</span></span>
+      </div>
+    `;
+    container.appendChild(block);
+  }
+
+  document.getElementById("grandTotal").textContent = `¥${grandTotal.toLocaleString()}`;
+}
+
+function monthRelativeLabel(month){
+  const now = new Date();
+  const baseMonth = now.getMonth() + 1;
+  for(let offset = 0; offset <= 2; offset++){
+    const m = ((baseMonth + offset - 1) % 12) + 1;
+    if(m === month) return ["今月","来月","再来月"][offset];
+  }
+  return `${month}月`;
+}
+
+async function copyText(text, btn){
+  let copied = false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+  }catch(e){}
+  if(!copied){
+    try{
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      copied = document.execCommand("copy");
+      ta.remove();
+    }catch(e){}
+  }
+  if(copied){
+    const orig = btn.textContent;
+    btn.textContent = "コピーしました";
+    setTimeout(()=>{ btn.textContent = orig; }, 1500);
+  } else {
+    showAlert("自動コピーができませんでした。下の欄を長押し(またはタップして全選択)してコピーしてください。");
+  }
+}
+
+function buildRequestMessage(entryList){
+  const sorted = [...entryList].sort((a,b)=>{
+    if(a.year !== b.year) return a.year - b.year;
+    if(a.month !== b.month) return a.month - b.month;
+    return a.day - b.day;
+  });
+  const months = [...new Set(sorted.map(e=>e.month))];
+  const monthPhrase = months.length === 1 ? `${monthRelativeLabel(months[0])}ですが` : "以下の日程ですが";
+  const lines = sorted.map(e=> e.assignment === "father" ? `${e.label}(${e.dow}・父)` : `${e.label}(${e.dow})`);
+  return `こんにちは。${monthPhrase}\n${lines.join("\n")}\nの日程にお越しいただくことは可能でしょうか。\nご確認お願いします。`;
+}
+
+function buildMessageBlock(name, message){
+  const block = document.createElement("div");
+  block.className = "contact-block";
+
+  const title = document.createElement("div");
+  title.className = "contact-block-title";
+  title.textContent = name;
+  block.appendChild(title);
+
+  const ta = document.createElement("textarea");
+  ta.className = "contact-message-text";
+  ta.readOnly = true;
+  ta.value = message;
+  block.appendChild(ta);
+
+  const btn = document.createElement("button");
+  btn.className = "btn-primary";
+  btn.textContent = "コピー";
+  btn.addEventListener("click", ()=> copyText(message, btn));
+  block.appendChild(btn);
+
+  return block;
+}
+
+function dateKey(entry){
+  return `${entry.year}-${entry.month}-${entry.day}`;
+}
+function dedupeByDate(list){
+  const map = new Map();
+  list.forEach(entry=>{
+    map.set(dateKey(entry), entry);
+  });
+  return [...map.values()];
+}
+
+let msgModalConfirmCallback = null;
+function showAlert(message){
+  document.getElementById("msgModalText").textContent = message;
+  document.getElementById("msgModalCancel").style.display = "none";
+  msgModalConfirmCallback = null;
+  document.getElementById("msgModal").style.display = "flex";
+}
+function showConfirm(message, onConfirm){
+  document.getElementById("msgModalText").textContent = message;
+  document.getElementById("msgModalCancel").style.display = "inline-block";
+  msgModalConfirmCallback = onConfirm;
+  document.getElementById("msgModal").style.display = "flex";
+}
+document.getElementById("msgModalOk").addEventListener("click", ()=>{
+  document.getElementById("msgModal").style.display = "none";
+  const cb = msgModalConfirmCallback;
+  msgModalConfirmCallback = null;
+  if(cb) cb();
+});
+document.getElementById("msgModalCancel").addEventListener("click", ()=>{
+  document.getElementById("msgModal").style.display = "none";
+  msgModalConfirmCallback = null;
+});
+
+document.getElementById("importBtn").addEventListener("click", ()=>{
+  const text = document.getElementById("pasteArea").value;
+  const found = parsePasteText(text);
+  if(found.length === 0){
+    showAlert("読み取れる日付が見つかりませんでした。「9/1(火)」のような形式で入力してください。");
+    return;
+  }
+  entries = dedupeByDate(entries.concat(found));
+  saveAll();
+  renderEntries();
+  document.getElementById("pasteArea").value = "";
+});
+
+function clearAllEntries(){
+  if(entries.length === 0) return;
+  showConfirm("入力済みの対象日を全て削除します。よろしいですか?", ()=>{
+    entries = [];
+    saveAll();
+    renderEntries();
+  });
+}
+document.getElementById("clearAllBtn").addEventListener("click", clearAllEntries);
+document.getElementById("calendarResetBtn").addEventListener("click", clearAllEntries);
+
+document.getElementById("saveDataBtn").addEventListener("click", ()=>{
+  saveAll();
+  showAlert(`保存しました(${entries.length}件の予定)。`);
+});
+
+document.getElementById("buildCustomMessageBtn").addEventListener("click", ()=>{
+  const selected = entries.filter(en=>selectedForMessage.has(en.id));
+  if(selected.length === 0){
+    showAlert("③結果で「選択」にチェックを入れてから作成してください。");
+    return;
+  }
+  const name = document.getElementById("customMessageName").value.trim() || "宛先";
+  const message = buildRequestMessage(selected);
+  const container = document.getElementById("customMessageResult");
+  container.innerHTML = "";
+  container.appendChild(buildMessageBlock(name, message));
+});
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function buildExportCanvas(){
+  const scale = 2;
+  const width = 860;
+  const margin = 28;
+  const contentWidth = width - margin*2;
+  const colors = {
+    bg:"#f7f5f2", card:"#ffffff", ink:"#2f2a26", sub:"#726a63",
+    line:"#e7e1da", accent:"#c97b5a", accentSoft:"#f3e2da",
+    sun:"#c25b5b", sat:"#4a7fbf",
+    father:"#5f8a5a", fatherSoft:"#e4ecdf",
+    svc2:"#7c6bb5", svc2Soft:"#e2ddf0"
+  };
+  function svcHexFor(assignment){
+    return assignment === "babysitter" ? {c:colors.svc2, soft:colors.svc2Soft} : {c:colors.accent, soft:colors.accentSoft};
+  }
+
+  const groupList = getCalendarGroups();
+  const hasFamisapo = entries.some(en=>en.assignment !== "father" && en.assignment !== "babysitter");
+  const hasBabysitter = entries.some(en=>en.assignment === "babysitter");
+  const hasFatherEntries = entries.some(en=>en.assignment === "father");
+  const legendH = groupList.length ? 26 : 0;
+  const cellW = contentWidth / 7;
+  const cellH = 62;
+  const headRowH = 22;
+  const titleH = 28;
+  const blockGap = 22;
+
+  const calMetrics = groupList.map(g=>{
+    const firstWeekday = new Date(g.year, g.month - 1, 1).getDay();
+    const daysInMonth = new Date(g.year, g.month, 0).getDate();
+    const rows = Math.ceil((firstWeekday + daysInMonth) / 7);
+    return { ...g, firstWeekday, daysInMonth, rows, h: titleH + headRowH + rows*cellH + blockGap };
+  });
+
+  const calSectionTitleH = 34;
+  const calTotalH = calMetrics.length ? calSectionTitleH + legendH + calMetrics.reduce((s,m)=>s+m.h,0) : 0;
+
+  const payableEntries = entries.filter(e => e.assignment !== "father");
+  const famisapoEntries = payableEntries.filter(e=>e.assignment !== "babysitter");
+  const babysitterEntries = payableEntries.filter(e=>e.assignment === "babysitter");
+  const famisapoBreakdownIds = ["tanaka","tashiro","kobayashi"].filter(id=> famisapoEntries.some(e=>e.assignment===id));
+
+  const sumSectionTitleH = 34;
+  const sumHeaderH = 26;
+  const sumPersonRowH = 20;
+  const sumBlockPad = 16;
+  const sumBlockGap = 14;
+
+  let sumBlocksH = 0;
+  if(famisapoEntries.length){
+    sumBlocksH += sumHeaderH + famisapoBreakdownIds.length*sumPersonRowH + sumBlockPad + sumBlockGap;
+  }
+  if(babysitterEntries.length){
+    sumBlocksH += sumHeaderH + sumBlockPad + sumBlockGap;
+  }
+  const sumTotalH = sumSectionTitleH + sumBlocksH + 56;
+
+  const headerH = 60;
+  const sectionGap = 20;
+  const totalHeight = margin*2 + headerH + calTotalH + sectionGap + sumTotalH;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(width*scale);
+  canvas.height = Math.round(totalHeight*scale);
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0,0,width,totalHeight);
+
+  let y = margin;
+  ctx.textAlign = "left";
+  ctx.fillStyle = colors.ink;
+  ctx.font = "700 20px sans-serif";
+  ctx.fillText("ベビーシッター/ファミサポ 料金シミュレーション", margin, y+20);
+  ctx.fillStyle = colors.sub;
+  ctx.font = "400 12px sans-serif";
+  const now = new Date();
+  ctx.fillText(`作成日: ${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`, margin, y+40);
+  y += headerH;
+
+  if(calMetrics.length){
+    ctx.fillStyle = colors.ink;
+    ctx.font = "700 16px sans-serif";
+    ctx.fillText("カレンダー表示", margin, y+18);
+    y += calSectionTitleH;
+
+    if(legendH > 0){
+      let lx = margin;
+      const ly = y + 12;
+      function drawDot(color, text){
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(lx+5, ly, 5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = colors.sub;
+        ctx.font = "400 11px sans-serif";
+        ctx.fillText(text, lx+15, ly+4);
+        lx += 15 + ctx.measureText(text).width + 16;
+      }
+      if(hasFamisapo) drawDot(colors.accent, "ファミサポ");
+      if(hasBabysitter) drawDot(colors.svc2, "ベビーシッター");
+      if(hasFatherEntries) drawDot(colors.father, "父");
+      ctx.fillStyle = colors.sub;
+      ctx.font = "400 11px sans-serif";
+      ctx.fillText("実線=確定 / 点線=予定", lx, ly+4);
+      y += legendH;
+    }
+
+    calMetrics.forEach(g=>{
+      ctx.fillStyle = colors.ink;
+      ctx.font = "700 14px sans-serif";
+      ctx.fillText(`${g.year}年${g.month}月`, margin, y+15);
+      y += titleH;
+
+      DOWS.forEach((dow,i)=>{
+        ctx.fillStyle = dow==="日" ? colors.sun : dow==="土" ? colors.sat : colors.sub;
+        ctx.font = "600 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(dow, margin + cellW*i + cellW/2, y+15);
+      });
+      ctx.textAlign = "left";
+      y += headRowH;
+
+      let col = g.firstWeekday;
+      let row = 0;
+      for(let day=1; day<=g.daysInMonth; day++){
+        const dayEntries = g.byDay.get(day) || [];
+        const payableToday = dayEntries.filter(en=>en.assignment !== "father");
+        const hasFather = dayEntries.some(en=>en.assignment === "father");
+        const cx = margin + col*cellW;
+        const cy = y + row*cellH;
+        const w = cellW - 4;
+        const h = cellH - 6;
+
+        const svcHex = payableToday.length ? svcHexFor(payableToday[0].assignment) : svcHexFor(null);
+        const bgFill = payableToday.length ? svcHex.soft : (hasFather ? colors.fatherSoft : colors.card);
+        const borderColor = payableToday.length ? svcHex.c : (hasFather ? colors.father : colors.line);
+        const allConfirmed = dayEntries.length > 0 && dayEntries.every(en=>en.confirmed);
+        ctx.fillStyle = bgFill;
+        roundRect(ctx, cx+2, cy+2, w, h, 6);
+        ctx.fill();
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1;
+        ctx.setLineDash(dayEntries.length && !allConfirmed ? [4,3] : []);
+        roundRect(ctx, cx+2, cy+2, w, h, 6);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = dayEntries.length ? colors.ink : colors.sub;
+        ctx.font = dayEntries.length ? "700 11px sans-serif" : "400 11px sans-serif";
+        ctx.fillText(String(day), cx+8, cy+18);
+
+        if(dayEntries.length && !allConfirmed){
+          ctx.fillStyle = colors.sub;
+          ctx.font = "400 9px sans-serif";
+          ctx.textAlign = "right";
+          ctx.fillText("予定", cx+w-4, cy+13);
+          ctx.textAlign = "left";
+        }
+
+        if(dayEntries.length){
+          const total = payableToday.reduce((s,en)=> s + entryRate(en), 0);
+          if(payableToday.length){
+            ctx.fillStyle = svcHex.c;
+            ctx.font = "700 12px sans-serif";
+            ctx.fillText(`¥${total.toLocaleString()}`, cx+8, cy+35);
+          }
+          const labelParts = [...new Set(payableToday.map(en=> assignmentShortLabel(en.assignment)))];
+          if(hasFather) labelParts.push("父");
+          const labelText = labelParts.join("/");
+          if(labelText){
+            ctx.fillStyle = hasFather && !payableToday.length ? colors.father : colors.sub;
+            ctx.font = "400 9px sans-serif";
+            ctx.fillText(labelText, cx+8, payableToday.length ? cy+49 : cy+35);
+          }
+        }
+
+        col++;
+        if(col > 6){ col = 0; row++; }
+      }
+      y += g.rows*cellH + blockGap;
+    });
+  }
+
+  y += sectionGap;
+
+  ctx.fillStyle = colors.ink;
+  ctx.font = "700 16px sans-serif";
+  ctx.fillText("サービス別・合計", margin, y+18);
+  y += sumSectionTitleH;
+
+  let grandTotal = 0;
+
+  if(famisapoEntries.length){
+    const famisapoTotal = famisapoEntries.reduce((s,en)=>s+entryRate(en),0);
+    grandTotal += famisapoTotal;
+    const blockH = sumHeaderH + famisapoBreakdownIds.length*sumPersonRowH + sumBlockPad;
+
+    ctx.fillStyle = colors.card;
+    roundRect(ctx, margin, y, contentWidth, blockH, 8);
+    ctx.fill();
+    ctx.strokeStyle = colors.line;
+    roundRect(ctx, margin, y, contentWidth, blockH, 8);
+    ctx.stroke();
+
+    let by = y + 10;
+    ctx.fillStyle = colors.ink;
+    ctx.font = "700 14px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("ファミサポ", margin+12, by+12);
+    ctx.fillStyle = colors.accent;
+    ctx.font = "700 14px sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(`¥${famisapoTotal.toLocaleString()} (${famisapoEntries.length}回)`, margin+contentWidth-12, by+12);
+    ctx.textAlign = "left";
+    by += sumHeaderH;
+
+    famisapoBreakdownIds.forEach(id=>{
+      const list = famisapoEntries.filter(en=>en.assignment===id);
+      const subtotal = list.reduce((s,en)=>s+entryRate(en),0);
+      ctx.fillStyle = colors.ink;
+      ctx.font = "400 12px sans-serif";
+      ctx.fillText(assignmentNames[id], margin+16, by+13);
+      ctx.fillStyle = colors.sub;
+      ctx.font = "400 11px sans-serif";
+      ctx.fillText(`${list.length}回`, margin+150, by+13);
+      ctx.fillStyle = colors.ink;
+      ctx.font = "600 12px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(`¥${subtotal.toLocaleString()}`, margin+contentWidth-12, by+13);
+      ctx.textAlign = "left";
+      by += sumPersonRowH;
+    });
+
+    y += blockH + sumBlockGap;
+  }
+
+  if(babysitterEntries.length){
+    const babysitterTotal = babysitterEntries.reduce((s,en)=>s+entryRate(en),0);
+    grandTotal += babysitterTotal;
+    const blockH = sumHeaderH + sumBlockPad;
+
+    ctx.fillStyle = colors.card;
+    roundRect(ctx, margin, y, contentWidth, blockH, 8);
+    ctx.fill();
+    ctx.strokeStyle = colors.line;
+    roundRect(ctx, margin, y, contentWidth, blockH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = colors.ink;
+    ctx.font = "700 14px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("ベビーシッター", margin+12, y+10+12);
+    ctx.fillStyle = colors.svc2;
+    ctx.font = "700 14px sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(`¥${babysitterTotal.toLocaleString()} (${babysitterEntries.length}回)`, margin+contentWidth-12, y+10+12);
+    ctx.textAlign = "left";
+
+    y += blockH + sumBlockGap;
+  }
+
+  y += 8;
+  ctx.strokeStyle = colors.line;
+  ctx.beginPath();
+  ctx.moveTo(margin, y);
+  ctx.lineTo(margin+contentWidth, y);
+  ctx.stroke();
+  y += 30;
+
+  ctx.fillStyle = colors.sub;
+  ctx.font = "500 13px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("合計金額", margin, y);
+
+  ctx.fillStyle = colors.accent;
+  ctx.font = "800 24px sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText(`¥${grandTotal.toLocaleString()}`, margin+contentWidth, y+2);
+  ctx.textAlign = "left";
+
+  return canvas;
+}
+
+function exportFilenameBase(){
+  const groupList = getCalendarGroups();
+  if(groupList.length === 0) return "babysitter_sim";
+  const months = groupList.map(g=>`${g.year}-${String(g.month).padStart(2,"0")}`).join("_");
+  return `babysitter_sim_${months}`;
+}
+
+function triggerDownload(href, filename){
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+  if(isIOS){
+    window.open(href, "_blank");
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function canvasToPdfBlob(canvas){
+  const pageWidthPt = canvas.width / 2;
+  const pageHeightPt = canvas.height / 2;
+  const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+  const base64 = jpegDataUrl.split(",")[1];
+  const binary = atob(base64);
+  const jpegBytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) jpegBytes[i] = binary.charCodeAt(i);
+
+  const enc = s => new TextEncoder().encode(s);
+  const chunks = [];
+  let offset = 0;
+  const offsets = [];
+  function push(bytesOrStr){
+    const bytes = typeof bytesOrStr === "string" ? enc(bytesOrStr) : bytesOrStr;
+    chunks.push(bytes);
+    offset += bytes.length;
+  }
+  function startObj(num){ offsets[num] = offset; }
+
+  push("%PDF-1.4\n");
+
+  startObj(1);
+  push("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+  startObj(2);
+  push("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+  startObj(3);
+  push(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidthPt} ${pageHeightPt}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+
+  startObj(4);
+  push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
+  push(jpegBytes);
+  push("\nendstream\nendobj\n");
+
+  const contentStream = `q ${pageWidthPt} 0 0 ${pageHeightPt} 0 0 cm /Im0 Do Q`;
+  startObj(5);
+  push(`5 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}\nendstream\nendobj\n`);
+
+  const xrefStart = offset;
+  push("xref\n0 6\n0000000000 65535 f \n");
+  for(let i=1;i<=5;i++){
+    push(String(offsets[i]).padStart(10,"0") + " 00000 n \n");
+  }
+  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
+
+  const totalLen = chunks.reduce((s,c)=>s+c.length,0);
+  const out = new Uint8Array(totalLen);
+  let p = 0;
+  chunks.forEach(c=>{ out.set(c,p); p += c.length; });
+  return new Blob([out], {type:"application/pdf"});
+}
+
+function showImagePreview(dataUrl){
+  document.getElementById("previewModalImg").src = dataUrl;
+  document.getElementById("imagePreviewModal").style.display = "flex";
+}
+document.getElementById("previewModalClose").addEventListener("click", ()=>{
+  document.getElementById("imagePreviewModal").style.display = "none";
+});
+document.getElementById("imagePreviewModal").addEventListener("click", e=>{
+  if(e.target.id === "imagePreviewModal") e.target.style.display = "none";
+});
+
+document.getElementById("exportPngBtn").addEventListener("click", ()=>{
+  if(entries.length === 0){
+    showAlert("対象日がありません。先に②で日付を取り込んでください。");
+    return;
+  }
+  const canvas = buildExportCanvas();
+  showImagePreview(canvas.toDataURL("image/png"));
+});
+
+document.getElementById("exportPdfBtn").addEventListener("click", ()=>{
+  if(entries.length === 0){
+    showAlert("対象日がありません。先に②で日付を取り込んでください。");
+    return;
+  }
+  const canvas = buildExportCanvas();
+  const blob = canvasToPdfBlob(canvas);
+  const url = URL.createObjectURL(blob);
+  triggerDownload(url, `${exportFilenameBase()}.pdf`);
+  setTimeout(()=> URL.revokeObjectURL(url), 5000);
+});
+
+document.getElementById("manualAddBtn").addEventListener("click", ()=>{
+  const dateVal = document.getElementById("manualDate").value.trim();
+  const dow = document.getElementById("manualDow").value;
+  const m = dateVal.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
+  if(!m){
+    showAlert("日付は「9/20」のように入力してください。");
+    return;
+  }
+  const newEntry = makeEntry(Number(m[1]), Number(m[2]), dow || null, false);
+  if(entries.some(en => dateKey(en) === dateKey(newEntry))){
+    showAlert(`${newEntry.label} はすでに追加されています。`);
+    return;
+  }
+  entries.push(newEntry);
+  saveAll();
+  renderEntries();
+  document.getElementById("manualDate").value = "";
+});
+
+initServiceConfig();
+renderEntries();
+</script>
+</body>
+</html>
