@@ -6,6 +6,10 @@
 const SHEET_NAME = "依頼状況";
 const HEADERS = ["id","year","month","day","dow","label","assignment","assignmentName","hours","rate","confirmed"];
 
+// Columns that must stay plain text (1-indexed): id, dow, label, assignment, assignmentName.
+// Without this, Sheets auto-converts values like "9/7" into a date, corrupting them.
+const TEXT_COLUMNS = [1, 5, 6, 7, 8];
+
 function getSheet_(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
@@ -15,7 +19,15 @@ function getSheet_(){
   if(sheet.getLastRow() === 0){
     sheet.appendRow(HEADERS);
   }
+  ensureTextFormat_(sheet);
   return sheet;
+}
+
+function ensureTextFormat_(sheet){
+  const rows = Math.max(sheet.getMaxRows(), 1000);
+  TEXT_COLUMNS.forEach(col=>{
+    sheet.getRange(1, col, rows, 1).setNumberFormat("@");
+  });
 }
 
 function jsonOut_(obj){
@@ -27,8 +39,9 @@ function readAllEntries_(){
   const data = sheet.getDataRange().getValues();
   if(data.length < 2) return [];
   const headers = data[0];
+  const idCol = headers.indexOf("id");
   return data.slice(1)
-    .filter(row => row[headers.indexOf("id")] !== "")
+    .filter(row => row[idCol] !== "" && row[idCol] !== "id")
     .map(row=>{
       const obj = {};
       headers.forEach((h,i)=>{ obj[h] = row[i]; });
