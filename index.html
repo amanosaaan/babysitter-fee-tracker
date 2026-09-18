@@ -290,6 +290,22 @@
   .cal-cell.blank{border-color:transparent;background:transparent;}
   .cal-cell.tentative{border-style:dashed;}
   .cal-tentative-tag{position:absolute;top:3px;right:5px;font-size:0.58rem;color:var(--sub);}
+  .cal-cell.has-entry,.cal-cell.has-father{cursor:pointer;}
+  .cal-cell.msg-selected{box-shadow:0 0 0 2px var(--ink) inset;}
+  .cal-cell.msg-selected::before{
+    content:"✓";
+    position:absolute;
+    top:3px;
+    left:5px;
+    width:13px;height:13px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--card);
+    font-size:0.6rem;
+    font-weight:700;
+    line-height:13px;
+    text-align:center;
+  }
   .cal-cell.has-entry.svc-accent{background:var(--accent-soft);border-color:var(--accent);}
   .cal-cell.has-entry.svc-svc2{background:var(--svc2-soft);border-color:var(--svc2);}
   .cal-cell.has-father:not(.has-entry){
@@ -467,6 +483,9 @@
 
   <div class="card">
     <h2><span class="step-badge">4</span>カレンダー表示</h2>
+    <div class="hint-box">
+      日付のマスをクリックすると、⑦の依頼メッセージ作成で使う「選択」に追加/解除できます(③結果のチェックボックスと連動します)。
+    </div>
     <div id="calendarContainer"></div>
     <div id="calendarEmptyHint" class="empty-hint" style="display:none;">まだ対象日がありません。</div>
     <div class="btn-row">
@@ -892,6 +911,7 @@ function renderEntries(){
       const id = e.target.dataset.id;
       if(e.target.checked) selectedForMessage.add(id);
       else selectedForMessage.delete(id);
+      renderCalendar();
     });
   });
 
@@ -991,7 +1011,8 @@ function renderCalendar(){
         svcClass = ` svc-${serviceColorKeyForAssignment(payableToday[0].assignment)}`;
       }
       const allConfirmed = dayEntries.length > 0 && dayEntries.every(en=>en.confirmed);
-      cell.className = "cal-cell" + (payableToday.length ? ` has-entry${svcClass}` : "") + (hasFather ? " has-father" : "") + (dayEntries.length && !allConfirmed ? " tentative" : "");
+      const allSelected = dayEntries.length > 0 && dayEntries.every(en=>selectedForMessage.has(en.id));
+      cell.className = "cal-cell" + (payableToday.length ? ` has-entry${svcClass}` : "") + (hasFather ? " has-father" : "") + (dayEntries.length && !allConfirmed ? " tentative" : "") + (allSelected ? " msg-selected" : "");
       if(dayEntries.length){
         const total = payableToday.reduce((sum,en)=> sum + entryRate(en), 0);
         const labelParts = [...new Set(payableToday.map(en=> assignmentShortLabel(en.assignment)))];
@@ -1003,6 +1024,14 @@ function renderCalendar(){
           ${payableToday.length ? `<div class="cal-amount">¥${total.toLocaleString()}</div>` : ""}
           ${labelText ? `<div class="cal-label">${labelText}</div>` : ""}
         `;
+        cell.addEventListener("click", ()=>{
+          const nowAllSelected = dayEntries.every(en=>selectedForMessage.has(en.id));
+          dayEntries.forEach(en=>{
+            if(nowAllSelected) selectedForMessage.delete(en.id);
+            else selectedForMessage.add(en.id);
+          });
+          renderEntries();
+        });
       } else {
         cell.innerHTML = `<div class="cal-daynum">${day}</div>`;
       }
