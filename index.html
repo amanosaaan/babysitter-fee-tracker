@@ -516,10 +516,9 @@
   <div class="card">
     <h2><span class="step-badge">7</span>依頼メッセージを作成</h2>
     <div class="hint-box">
-      ③結果で「選択」にチェックを入れた日付をもとに、任意の宛先へのメッセージを作成します。宛先名を入力してボタンを押してください。
+      ③結果やカレンダーで「選択」した日付をもとに、依頼メッセージを作成します。
     </div>
-    <div class="manual-add">
-      <input type="text" id="customMessageName" placeholder="宛先名(例: 田代さん)" />
+    <div class="btn-row">
       <button class="btn-primary" id="buildCustomMessageBtn">選択した日付でメッセージを作成</button>
     </div>
     <div id="customMessageResult" class="contact-messages"></div>
@@ -1162,10 +1161,12 @@ function buildMessageBlock(name, message){
   const block = document.createElement("div");
   block.className = "contact-block";
 
-  const title = document.createElement("div");
-  title.className = "contact-block-title";
-  title.textContent = name;
-  block.appendChild(title);
+  if(name){
+    const title = document.createElement("div");
+    title.className = "contact-block-title";
+    title.textContent = name;
+    block.appendChild(title);
+  }
 
   const ta = document.createElement("textarea");
   ta.className = "contact-message-text";
@@ -1275,11 +1276,10 @@ document.getElementById("buildCustomMessageBtn").addEventListener("click", ()=>{
     showAlert("③結果で「選択」にチェックを入れてから作成してください。");
     return;
   }
-  const name = document.getElementById("customMessageName").value.trim() || "宛先";
   const message = buildRequestMessage(selected);
   const container = document.getElementById("customMessageResult");
   container.innerHTML = "";
-  container.appendChild(buildMessageBlock(name, message));
+  container.appendChild(buildMessageBlock(null, message));
 });
 
 function roundRect(ctx,x,y,w,h,r){
