@@ -1137,14 +1137,24 @@ async function copyText(text, btn){
 }
 
 function buildRequestMessage(entryList){
-  const sorted = [...entryList].sort((a,b)=>{
+  const byDate = new Map();
+  entryList.forEach(e=>{
+    const key = dateKey(e);
+    const existing = byDate.get(key);
+    if(existing){
+      if(e.assignment === "father") existing.hasFather = true;
+    } else {
+      byDate.set(key, { year: e.year, month: e.month, day: e.day, dow: e.dow, label: e.label, hasFather: e.assignment === "father" });
+    }
+  });
+  const sorted = [...byDate.values()].sort((a,b)=>{
     if(a.year !== b.year) return a.year - b.year;
     if(a.month !== b.month) return a.month - b.month;
     return a.day - b.day;
   });
   const months = [...new Set(sorted.map(e=>e.month))];
   const monthPhrase = months.length === 1 ? `${monthRelativeLabel(months[0])}ですが` : "以下の日程ですが";
-  const lines = sorted.map(e=> e.assignment === "father" ? `${e.label}(${e.dow}・父)` : `${e.label}(${e.dow})`);
+  const lines = sorted.map(e=> e.hasFather ? `${e.label}(${e.dow}・父)` : `${e.label}(${e.dow})`);
   return `こんにちは。${monthPhrase}\n${lines.join("\n")}\nの日程にお越しいただくことは可能でしょうか。\nご確認お願いします。`;
 }
 
